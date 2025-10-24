@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BLOOD BRIDGE - Dashboard (Org {{ org.org_id }})</title>
+  <style>
+    body{font-family:ui-sans-serif,system-ui,-apple-system; background:#0b1220; color:#f7fbff; padding:30px;}
+    h2{margin:0 0 6px 0}
+    .sub{color:#9fb2d0; font-size:14px; margin-bottom:18px;}
+    .actions{display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap;}
+    a.btn, button.btn{background:#243250; color:white; padding:8px 14px; border-radius:10px; text-decoration:none; border:0; cursor:pointer;}
+    a.btn:hover, button.btn:hover{background:#3b82f6;}
+    .card{background:#121a2b; border:1px solid #243250; border-radius:16px; padding:20px; margin-bottom:30px;}
+    table{width:100%; border-collapse:collapse;}
+    th,td{padding:12px 14px; border-bottom:1px solid #243250; text-align:left; vertical-align:middle;}
+    th{color:#9fb2d0;}
+    .pill{display:inline-block; padding:4px 10px; background:#0e1627; border:1px solid #243250; border-radius:9999px;}
+    .filters{display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin:8px 0 16px 0;}
+    .filters label{font-size:12px; color:#9fb2d0; display:flex; flex-direction:column; gap:6px;}
+    input[type="text"], select{background:#0b1220; border:1px solid #243250; color:#f7fbff; border-radius:8px; padding:6px 8px;}
+  </style>
+</head>
+<body>
+  <h2>BLOOD BRIDGE</h2>
+  <div class="sub">
+    {{ org.name }} — {{ org.city }}, {{ org.state }}
+  </div>
+
+  <div class="actions">
+    <a class="btn" href="{{ url_for('manage_inventory') }}">Manage Inventory</a>
+    <a class="btn" href="{{ url_for('view_requests') }}">View Requests</a>
+    <a class="btn" href="{{ url_for('new_request') }}">New Request</a>
+    <a class="btn" href="{{ url_for('logout') }}">Logout</a>
+  </div>
+
+  <div class="card">
+    <h3>Your Inventory</h3>
+
+    <!-- FILTER BAR -->
+    <form method="get" class="filters">
+      <label>
+        Search
+        <input type="text" name="q" placeholder="Blood type / component"
+               value="{{ (filters.q if filters else '') }}">
+      </label>
+      <label>
+        Blood Type
+        <select name="blood_type">
+          <option value="">Any</option>
+          {% for bt in ['O+','O-','A+','A-','B+','B-','AB+','AB-'] %}
+            <option value="{{ bt }}" {% if filters and filters.blood_type==bt %}selected{% endif %}>{{ bt }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        Component
+        <select name="component">
+          <option value="">Any</option>
+          {% for c in ['RBC','PLASMA','PLATELETS','CRYO','WHOLE'] %}
+            <option value="{{ c }}" {% if filters and filters.component==c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button class="btn" type="submit">Apply</button>
+      <a class="btn" href="{{ url_for('dashboard') }}">Reset</a>
+    </form>
+
+    <table>
+      <tr>
+        <th>Blood Type</th>
+        <th>Component</th>
+        <th>Units</th>
+        <th>Updated</th>
+      </tr>
+      {% for r in inventory %}
+      <tr>
+        <td><span class="pill">{{ r.blood_type }}</span></td>
+        <td><span class="pill">{{ r.component }}</span></td>
+        <td><strong>{{ r.units }}</strong></td>
+        <td>{{ r.updated_at or '—' }}</td>
+      </tr>
+      {% endfor %}
+      {% if not inventory %}
+      <tr><td colspan="4" style="color:#9fb2d0;">No inventory matches your filters.</td></tr>
+      {% endif %}
+    </table>
+  </div>
+</body>
+</html>

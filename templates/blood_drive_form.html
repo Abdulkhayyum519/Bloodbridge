@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Create Blood Drive</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --bg:#0b1220; --card:#121a2b; --border:#1e293b; --text:#f7fbff; --muted:#9fb2d0; --accent:#3b82f6; }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Arial}
+    .wrap{max-width:720px;margin:48px auto;padding:0 16px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px}
+    h1{margin:0 0 16px 0;font-size:22px}
+    label{display:block;margin:14px 0 8px;color:var(--muted);font-size:14px}
+    input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:#0f172a;color:var(--text)}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .btns{margin-top:20px;display:flex;gap:12px}
+    .btn{padding:10px 16px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-ghost{background:#243250;color:#d0defa;text-decoration:none;display:inline-flex;align-items:center}
+    small{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Create Blood Drive</h1>
+
+      <form action="{{ url_for('new_blood_drive') }}" method="post">
+        <div class="row">
+          <div style="flex:1 1 220px">
+            <label for="drive_date">Drive Date</label>
+            <input id="drive_date" name="drive_date" type="date" required />
+            <small>Saved as the request date (midnight).</small>
+          </div>
+        </div>
+
+        <label for="location">Location (shown to donors)</label>
+        <input id="location" name="location" type="text" placeholder="e.g., Community Center, 123 Main St" />
+
+        <div class="btns">
+          <button type="submit" class="btn btn-primary">Publish Blood Drive</button>
+          <a href="{{ url_for('dashboard') }}" class="btn btn-ghost">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

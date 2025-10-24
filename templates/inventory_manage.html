@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Manage Inventory • Org {{ org }}</title>
+  <style>
+    body{font-family:ui-sans-serif,system-ui,-apple-system; background:#0b1220; color:#f7fbff; padding:30px;}
+    h2{margin:0 0 16px 0}
+    a{color:#3b82f6; text-decoration:none;}
+    a:hover{text-decoration:underline;}
+    .card{background:#121a2b; border:1px solid #243250; border-radius:16px; padding:20px; margin-bottom:24px;}
+    table{width:100%; border-collapse:collapse;}
+    th,td{padding:10px 12px; border-bottom:1px solid #243250; text-align:left; vertical-align:middle;}
+    th{color:#9fb2d0;}
+    .btn{background:#243250; color:#fff; padding:8px 14px; border-radius:10px; border:0; cursor:pointer; margin-right:6px;}
+    .btn:hover{background:#3b82f6;}
+    input[type="number"], input[type="text"], select{
+      background:#0b1220; border:1px solid #243250; color:#f7fbff; border-radius:8px; padding:6px 8px;
+    }
+    .pill{display:inline-block; padding:4px 10px; background:#0e1627; border:1px solid #243250; border-radius:9999px;}
+    .flash{background:#19233a;border:1px solid #2a3a5c;border-radius:10px;padding:10px 14px;margin-bottom:8px;}
+    .flash strong{text-transform:uppercase;color:#9fb2d0;font-size:12px;}
+    .right{text-align:right;}
+  </style>
+</head>
+<body>
+  <h2>Manage Inventory — Org {{ org }}</h2>
+  <p>
+    <a href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
+  </p>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div style="margin:12px 0;">
+        {% for category, msg in messages %}
+          <div class="flash">
+            <strong>{{ category }}</strong>
+            <div>{{ msg }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="card">
+    <h3>Your Inventory</h3>
+    <table>
+      <tr>
+        <th>Blood Type</th>
+        <th>Component</th>
+        <th class="right">Units</th>
+        <th>Updated</th>
+        <th>Actions</th>
+      </tr>
+      {% for r in inventory %}
+      <tr>
+        <td><span class="pill">{{ r.blood_type }}</span></td>
+        <td><span class="pill">{{ r.component }}</span></td>
+        <td class="right"><strong>{{ r.units }}</strong></td>
+        <td>{{ r.updated_at or '—' }}</td>
+        <td>
+          <!-- SET absolute value -->
+          <form style="display:inline" method="post" action="{{ url_for('update_inventory') }}">
+            <input type="hidden" name="blood_type" value="{{ r.blood_type }}">
+            <input type="hidden" name="component"  value="{{ r.component }}">
+            <input type="hidden" name="action"     value="set">
+            <input type="number" name="units" min="0" style="width:6rem" placeholder="{{ r.units }}">
+            <button class="btn" type="submit">Set</button>
+          </form>
+
+          <!-- ADD -->
+          <form style="display:inline" method="post" action="{{ url_for('update_inventory') }}">
+            <input type="hidden" name="blood_type" value="{{ r.blood_type }}">
+            <input type="hidden" name="component"  value="{{ r.component }}">
+            <input type="hidden" name="action"     value="add">
+            <input type="number" name="units" min="1" style="width:5rem" placeholder="+">
+            <button class="btn" type="submit">Add</button>
+          </form>
+
+          <!-- REMOVE -->
+          <form style="display:inline" method="post" action="{{ url_for('update_inventory') }}">
+            <input type="hidden" name="blood_type" value="{{ r.blood_type }}">
+            <input type="hidden" name="component"  value="{{ r.component }}">
+            <input type="hidden" name="action"     value="remove">
+            <input type="number" name="units" min="1" style="width:5rem" placeholder="-">
+            <button class="btn" type="submit">Remove</button>
+          </form>
+
+          <!-- DELETE ROW -->
+          <form style="display:inline" method="post" action="{{ url_for('update_inventory') }}"
+                onsubmit="return confirm('Delete this row? This sets units to 0 and removes the entry.');">
+            <input type="hidden" name="blood_type" value="{{ r.blood_type }}">
+            <input type="hidden" name="component"  value="{{ r.component }}">
+            <input type="hidden" name="action"     value="delete">
+            <button class="btn" type="submit">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>Add New Item</h3>
+    <form method="post" action="{{ url_for('update_inventory') }}">
+      <input type="hidden" name="action" value="add">
+      <label>Blood Type
+        <input type="text" name="blood_type" placeholder="e.g., O+" required>
+      </label>
+      &nbsp;&nbsp;
+      <label>Component
+        <input type="text" name="component" placeholder="e.g., RBC / WHOLE / PLATELETS / CRYO" required>
+      </label>
+      &nbsp;&nbsp;
+      <label>Units
+        <input type="number" name="units" min="1" placeholder="e.g., 10" required>
+      </label>
+      &nbsp;&nbsp;
+      <button class="btn" type="submit">Add</button>
+    </form>
+  </div>
+</body>
+</html>

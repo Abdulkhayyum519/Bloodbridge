@@ -1,0 +1,117 @@
+<!-- templates/login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BLOOD BRIDGE • Sign in</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0b1220; --card:#121a2b; --border:#243250; --text:#f7fbff; --muted:#9fb2d0; --accent:#3b82f6;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100vh; color:var(--text); background:radial-gradient(1200px 800px at 80% -10%, #1a2440 0%, #0b1220 50%);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      display:flex; align-items:center; justify-content:center; padding:32px;
+    }
+    .wrap{width:100%; max-width:980px; display:grid; grid-template-columns: 1.1fr 0.9fr; gap:28px; align-items:stretch}
+    .brand{
+      background:linear-gradient(180deg, rgba(18,26,43,.8), rgba(18,26,43,.6));
+      border:1px solid var(--border); border-radius:20px; padding:28px; position:relative; overflow:hidden;
+    }
+    .brand .logo{
+      display:flex; align-items:center; gap:14px; margin-bottom:18px;
+    }
+    .logo svg{width:40px; height:40px; flex:0 0 40px; filter:drop-shadow(0 4px 10px rgba(255,60,60,.2))}
+    .title{font-size:28px; font-weight:800; letter-spacing:.3px}
+    .tag{color:var(--muted); margin-top:6px}
+    .hero{
+      position:absolute; right:-40px; bottom:-40px; width:360px; height:360px; opacity:.25;
+      background:
+        radial-gradient(110px 110px at 65% 35%, #ff5a5a55 0%, transparent 60%),
+        radial-gradient(140px 140px at 20% 70%, #3b82f655 0%, transparent 60%);
+      border-radius:50%;
+      filter: blur(20px);
+    }
+    .screenshot{
+      border:1px dashed #2f3f63; border-radius:16px; padding:16px; margin-top:18px;
+      color:#b7c6e5; font-size:14px;
+    }
+    .auth{
+      background:var(--card); border:1px solid var(--border); border-radius:20px; padding:28px;
+      display:flex; flex-direction:column; gap:14px;
+    }
+    label{color:var(--muted); font-size:13px; display:block; margin-bottom:6px;}
+    input{
+      width:100%; padding:12px 14px; border-radius:12px; border:1px solid var(--border); background:#0b1220; color:var(--text);
+      outline:none;
+    }
+    input:focus{border-color:#4669a6; box-shadow:0 0 0 3px rgba(59,130,246,.25)}
+    .btn{
+      margin-top:6px; width:100%; padding:12px 14px; border:none; border-radius:12px; background:var(--accent); color:white; font-weight:700;
+      cursor:pointer;
+    }
+    .btn:hover{filter:brightness(1.05)}
+    .hint{color:var(--muted); font-size:12px; text-align:center; margin-top:6px}
+    @media (max-width: 900px){
+      .wrap{grid-template-columns:1fr}
+      .brand{order:2}
+      .auth{order:1}
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <!-- Left: Brand / hero -->
+    <section class="brand">
+      <div class="logo">
+        <!-- Inline logo (red drop + cross). Replace with your image if you like -->
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <defs>
+            <linearGradient id="g" x1="0" x2="1">
+              <stop offset="0" stop-color="#ff6b6b"/><stop offset="1" stop-color="#ff3b3b"/>
+            </linearGradient>
+          </defs>
+          <path d="M32 6 C32 6 16 24 16 36 c0 8.8 7.2 16 16 16s16-7.2 16-16C48 24 32 6 32 6z" fill="url(#g)"/>
+          <rect x="28" y="24" width="8" height="20" rx="2" fill="#fff"/>
+          <rect x="22" y="30" width="20" height="8" rx="2" fill="#fff"/>
+        </svg>
+        <div>
+          <div class="title">BLOOD BRIDGE</div>
+          <div class="tag">Connect hospitals with blood banks—fast.</div>
+        </div>
+      </div>
+
+      <div class="screenshot">
+        Tip: Use your provided username & password. Roles determine what you can see (BANK users can accept/reject requests).
+      </div>
+
+      <div class="hero" aria-hidden="true"></div>
+    </section>
+
+    <!-- Right: Auth card -->
+    <section class="auth">
+      <h3 style="margin:0 0 6px 0;">Sign in</h3>
+      <form method="POST" action="{{ url_for('login') }}">
+        <div>
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" autocomplete="username" required />
+        </div>
+        <div>
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <button class="btn" type="submit">Login</button>
+      </form>
+      <div class="hint">Need access? Contact your admin.</div>
+    </section>
+  </main>
+
+  <!-- If you prefer a real image file instead of the inline SVG:
+       1) put a logo at: static/img/logo.png
+       2) replace the <svg> block above with:
+       <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Blood Bridge logo" width="40" height="40" />
+  -->
+</body>
+</html>

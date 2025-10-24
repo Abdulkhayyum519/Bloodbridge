@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Request Blood • Org {{ org }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg:#0b1220; --card:#121a2b; --line:#243250;
+      --muted:#9fb2d0; --white:#f7fbff; --blue:#2563eb; --blue2:#3b82f6;
+    }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      background: var(--bg);
+      color: var(--white);
+      margin: 0;
+      padding: 40px;
+    }
+    .container { max-width: 720px; margin: 0 auto; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 24px 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    h2 { margin: 0 0 18px 0; font-size: 1.4rem; }
+    label { display:block; font-weight:500; color:var(--muted); }
+    .hint { font-size:12px; color:var(--muted); margin-bottom:6px; }
+
+    select, input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #0a1224;
+      color: var(--white);
+      font-size: 0.95rem;
+      margin-bottom: 14px;
+    }
+    select:focus, input:focus {
+      outline: 2px solid var(--blue);
+      border-color: var(--blue);
+    }
+
+    .grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .actions {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-top: 6px;
+    }
+    .btn {
+      appearance:none; border:none; border-radius:12px;
+      padding:10px 18px; font-weight:600; cursor:pointer; font-size:0.95rem;
+      background:#243250; color:#fff;
+    }
+    .btn.primary {
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+    }
+    a.btn { text-decoration:none; display:inline-block; }
+    a.btn:hover { opacity:.95; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h2>Request Blood • Org {{ org }}</h2>
+
+      <form method="post" action="{{ url_for('new_request') }}">
+        <!-- STEP 1: Only one dropdown (Urgency) -->
+        <label style="margin-bottom:12px;">
+          <div class="hint">Urgency</div>
+          <select name="urgency_kind" id="urgency_kind" required>
+            <option value="">Select…</option>
+            <option value="emergency">Emergency (Level 1)</option>
+            <option value="blood_drive">Blood Drive (Level 2)</option>
+          </select>
+        </label>
+
+        <!-- STEP 2: Appears ONLY when Urgency = Emergency -->
+        <div id="emergency_fields" style="display:none;">
+          <div class="grid">
+            <label>
+              <div class="hint">Blood Type</div>
+              <select name="blood_type">
+                <option value="">Select…</option>
+                {% for bt in ['O+','O-','A+','A-','B+','B-','AB+','AB-'] %}
+                  <option value="{{ bt }}">{{ bt }}</option>
+                {% endfor %}
+              </select>
+            </label>
+
+            <label>
+              <div class="hint">Component</div>
+              <select name="component">
+                <option value="">Select…</option>
+                {% for c in ['RBC','Plasma','Platelets','Whole'] %}
+                  <option value="{{ c }}">{{ c }}</option>
+                {% endfor %}
+              </select>
+            </label>
+
+            <label>
+              <div class="hint">Units Needed</div>
+              <input type="number" name="units" min="1" placeholder="Enter number of units" />
+            </label>
+
+            <label>
+              <div class="hint">Send to</div>
+              <select name="send_to" id="send_to">
+                <option value="BloodBank">Blood Bank</option>
+                <option value="Donor">Donor</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" type="submit">Submit request</button>
+          <a class="btn" href="{{ url_for('dashboard') }}">← Back to dashboard</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const urgencySel = document.getElementById('urgency_kind');
+    const emergencyFields = document.getElementById('emergency_fields');
+
+    function toggleEmergencyFields() {
+      emergencyFields.style.display = (urgencySel.value === 'emergency') ? 'block' : 'none';
+    }
+    urgencySel.addEventListener('change', toggleEmergencyFields);
+    // init on load
+    toggleEmergencyFields();
+  </script>
+</body>
+</html>

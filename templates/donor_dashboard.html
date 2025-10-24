@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ donor.FirstName }} {{ donor.LastName }} • Donor Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121a2b;
+      --border: #1e293b;
+      --text: #f7fbff;
+      --muted: #9fb2d0;
+      --accent: #3b82f6;
+      --critical: #dc2626;
+      --success: #16a34a;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      padding: 32px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container { max-width: 1000px; width: 100%; display: flex; flex-direction: column; gap: 24px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    h2 { margin: 0; font-size: 22px; }
+    h3 { margin: 0; font-size: 18px; }
+    .muted { color: var(--muted); font-size: 14px; }
+
+    /* ---------- Donor Header ---------- */
+    .donor-header {
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; align-items: center;
+    }
+    .donor-left { display: flex; flex-direction: column; gap: 6px; }
+    .donor-meta {
+      display: flex; flex-wrap: wrap; gap: 12px; font-size: 14px; color: var(--muted);
+    }
+    .donor-meta div { white-space: nowrap; }
+    .donor-meta span { color: var(--text); font-weight: 500; }
+    .badge {
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .badge-red { background: var(--critical); color: white; }
+    .badge-blue { background: #2563eb; color: white; }
+    .badge-purple { background: #6f42c1; color: white; }
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-green { background: var(--success); color: white; }
+    .btn-green:hover { filter: brightness(1.1); }
+    .btn-gray { background: #243250; color: #d0defa; }
+    .btn-gray:hover { filter: brightness(1.06); }
+
+    /* ---------- Table ---------- */
+    .requests-header {
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+      margin-bottom: 10px;
+    }
+    input[type="text"] {
+      padding: 10px 12px; border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0f172a;
+      color: var(--text);
+      width: 240px;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    th {
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    td { font-size: 14px; }
+    .tag {
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .tag-critical { background: #7f1d1d; color: #fca5a5; }
+    .tag-high { background: #78350f; color: #fcd34d; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- Donor Header -->
+    <div class="card">
+      <div class="donor-header">
+        <div class="donor-left">
+          <h2>{{ donor.FirstName }} {{ donor.LastName }}</h2>
+          <div class="donor-meta">
+            <div><strong>Blood Type:</strong> <span>{{ donor.BloodType }}</span></div>
+            <div><strong>Age:</strong> <span>{{ donor.Age }}</span></div>
+            <div><strong>Gender:</strong> <span>{{ donor.Gender }}</span></div>
+            <div><strong>Location:</strong> <span>{{ donor.City }}, {{ donor.State }}</span></div>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end;">
+          {% if donor.Level == 1 %}
+            <span class="badge badge-red">LEVEL 1 • EMERGENCY ONLY</span>
+          {% elif donor.Level == 2 %}
+            <span class="badge badge-blue">LEVEL 2 • BLOOD DRIVE</span>
+          {% else %}
+            <span class="badge badge-purple">LEVEL 3 • BOTH</span>
+          {% endif %}
+          <a class="btn btn-gray" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Requests Table -->
+    <div class="card">
+      <div class="requests-header">
+        <h3>Requests (Hospitals & Blood Banks)</h3>
+        <input type="text" id="search" placeholder="Filter by name, city, or level...">
+      </div>
+
+      <table id="requests">
+        <thead>
+          <tr>
+            <th>Requester</th>
+            <th>Type</th>
+            <th>Blood Type</th>
+            <th>Component</th>
+            <th>Units</th>
+            <th>Level</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in requests_rows %}
+          <tr id="row-{{ r.request_id }}">
+            <td>
+              <div>{{ r.name }}</div>
+              <div class="muted" style="font-size:12px;">{{ r.city }}, {{ r.state }}</div>
+            </td>
+            <td>{{ r.org_type }}</td>
+            <td>
+              <span class="tag" style="background:#1e293b;">
+                {{ r.blood_type if r.blood_type else '—' }}
+              </span>
+            </td>
+            <td>
+              <span class="tag" style="background:#1e3a8a; color:#93c5fd;">
+                {{ r.component if r.component else '—' }}
+              </span>
+            </td>
+            <td>{{ r.units if r.units is not none else '—' }}</td>
+            <td>
+              {% if r.level == 'CRITICAL' %}
+                <span class="tag tag-critical">CRITICAL</span>
+              {% elif r.level == 'HIGH' %}
+                <span class="tag tag-high">HIGH</span>
+              {% else %}
+                <span class="tag" style="background:#1e293b;">{{ r.level }}</span>
+              {% endif %}
+            </td>
+            <td>{{ r.status }}</td>
+            <td>
+              <div class="actions">
+                <button class="btn btn-green"
+                        data-url="{{ url_for('donor_accept_request', request_id=r.request_id) }}"
+                        data-row="row-{{ r.request_id }}"
+                        onclick="postAction(this)">
+                  Accept
+                </button>
+                <button class="btn btn-gray"
+                        data-url="{{ url_for('donor_reject_request', request_id=r.request_id) }}"
+                        data-row="row-{{ r.request_id }}"
+                        onclick="postAction(this)">
+                  Reject
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" style="text-align:center;color:var(--muted);">No requests available at this time.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script>
+    // Simple client-side filter
+    const input = document.getElementById('search');
+    input.addEventListener('input', () => {
+      const q = input.value.toLowerCase();
+      document.querySelectorAll('#requests tbody tr').forEach(tr => {
+        tr.style.display = tr.innerText.toLowerCase().includes(q) ? '' : 'none';
+      });
+    });
+
+    // POST helper that removes the row on success
+    async function postAction(btn) {
+      const url = btn.getAttribute('data-url');
+      const rowId = btn.getAttribute('data-row');
+      const row = document.getElementById(rowId);
+
+      // disable both buttons in this row to prevent double posts
+      if (row) row.querySelectorAll('button').forEach(b => { b.disabled = true; b.style.opacity = 0.7; });
+
+      try {
+        const res = await fetch(url, { method: 'POST' });
+        if (res.ok) {
+          // Hide immediately; server redirects back to dashboard anyway
+          if (row) row.remove();
+        } else {
+          // Re-enable on failure
+          if (row) row.querySelectorAll('button').forEach(b => { b.disabled = false; b.style.opacity = 1; });
+          alert('Something went wrong. Please try again.');
+        }
+      } catch (e) {
+        if (row) row.querySelectorAll('button').forEach(b => { b.disabled = false; b.style.opacity = 1; });
+        alert('Network error. Please try again.');
+      }
+    }
+  </script>
+</body>
+</html>

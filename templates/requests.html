@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Requests • Org {{ org }}</title>
+  <style>
+    body{font-family:ui-sans-serif,system-ui,-apple-system; background:#0b1220; color:#f7fbff; padding:30px;}
+    h2{margin-top:0}
+    a{color:#3b82f6; text-decoration:none;}
+    a:hover{text-decoration:underline;}
+    .card{background:#121a2b; border:1px solid #243250; border-radius:16px; padding:20px; margin-bottom:30px;}
+    table{width:100%; border-collapse:collapse;}
+    th,td{padding:10px 12px; border-bottom:1px solid #243250; text-align:left; vertical-align:middle;}
+    th{color:#9fb2d0;}
+    .ok{color:#14a44d;} .warn{color:#ff8c1a;} .low{color:#e44;}
+    .btn{background:#243250; color:white; padding:8px 14px; border-radius:10px; text-decoration:none; margin-right:8px; border:0; cursor:pointer;}
+    .btn:hover{background:#3b82f6;}
+    form.inline{display:inline;}
+    input[type="number"], input[type="text"], select{background:#0b1220; border:1px solid #243250; color:#f7fbff; border-radius:8px; padding:6px 8px;}
+    .muted{color:#9fb2d0; font-size:12px}
+    .filters{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:10px 0 16px 0;}
+    .filters label{font-size:12px; color:#9fb2d0; display:flex; flex-direction:column; gap:6px;}
+    .pill{display:inline-block; padding:4px 10px; background:#0e1627; border:1px solid #243250; border-radius:9999px;}
+  </style>
+</head>
+<body>
+  <h2>Blood Requests — Org {{ org }}</h2>
+  <p>
+    <a class="btn" href="{{ url_for('dashboard') }}">← Back to Dashboard</a>
+    <a class="btn" href="{{ url_for('new_request') }}">New Request</a>
+  </p>
+
+  <!-- FILTER BAR (works for both sections) -->
+  <form method="get" class="card" style="padding:14px 16px;">
+    <div class="filters">
+      <label>
+        Search
+        <input type="text" name="q" placeholder="Hospital / city / state / blood / component"
+               value="{{ filters.q if filters else '' }}" style="min-width:260px;">
+      </label>
+      <label>
+        Blood Type
+        <select name="blood_type">
+          <option value="">Any</option>
+          {% for bt in ['O+','O-','A+','A-','B+','B-','AB+','AB-'] %}
+            <option value="{{ bt }}" {% if filters and filters.blood_type==bt %}selected{% endif %}>{{ bt }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        Component
+        <select name="component">
+          <option value="">Any</option>
+          {% for c in ['RBC','PLASMA','PLATELETS','WHOLE'] %}
+            <option value="{{ c }}" {% if filters and filters.component==c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        Status
+        <select name="status">
+          <option value="">Any</option>
+          {% for s in ['OPEN','CLAIMED','PARTIAL','FULFILLED','REJECTED'] %}
+            <option value="{{ s }}" {% if filters and filters.status==s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <div style="margin-top:22px;">
+        <button class="btn" type="submit">Apply</button>
+        <a class="btn" href="{{ url_for('view_requests') }}">Reset</a>
+      </div>
+    </div>
+  </form>
+
+  <!-- BANK view: All hospital requests -->
+  {% if role == 'BloodBank' %}
+  <div class="card">
+    <h3>All Hospital Requests</h3>
+    {% if all_hospital_requests %}
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Hospital</th>
+          <th>Location</th>
+          <th>Blood Type</th>
+          <th>Component</th>
+          <th>Units Remaining</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Action</th>
+        </tr>
+        {% for r in all_hospital_requests %}
+          <tr>
+            <td>{{ r.request_id }}</td>
+            <td>{{ r.hospital_name or r.hospital_id }}</td>
+            <td>{{ r.city }}, {{ r.state }}</td>
+            <td><span class="pill">{{ r.blood_type }}</span></td>
+            <td><span class="pill">{{ r.component }}</span></td>
+            <td>{{ r.units }}</td>
+            <td>
+              {% if r.status == 'FULFILLED' %}
+                <span class="ok">{{ r.status }}</span>
+              {% elif r.status in ['OPEN','CLAIMED','PARTIAL'] %}
+                <span class="warn">{{ r.status }}</span>
+              {% else %}
+                <span class="low">{{ r.status }}</span>
+              {% endif %}
+            </td>
+            <td>{{ r.created_at }}</td>
+            <td>
+              {% set can_act = (r.status in ['OPEN','CLAIMED','PARTIAL']) and (r.my_bank_state != 'REJECTED') %}
+              {% if can_act %}
+                <form class="inline" method="post" action="{{ url_for('accept_request', request_id=r.request_id) }}">
+                  <input type="number" name="units" min="1" max="{{ r.units }}" value="{{ r.units }}" />
+                  <button class="btn" type="submit">Accept</button>
+                </form>
+                <form class="inline" method="post" action="{{ url_for('reject_request', request_id=r.request_id) }}">
+                  <input type="text" name="note" placeholder="reason (optional)" style="width:10rem;">
+                  <button class="btn" type="submit">Reject</button>
+                </form>
+              {% else %}
+                <span class="muted">—</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p>No matching hospital requests.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- My org's own requests -->
+  <div class="card">
+    <h3>Your Submitted Requests</h3>
+    {% if requests %}
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Blood Type</th>
+          <th>Component</th>
+          <th>Units Remaining</th>
+          <th>Urgency</th>
+          <th>Status</th>
+          <th>Accepted By</th>
+          <th>Note</th>
+          <th>Updated</th>
+        </tr>
+        {% for r in requests %}
+          <tr>
+            <td>{{ r.request_id }}</td>
+            <td><span class="pill">{{ r.blood_type }}</span></td>
+            <td><span class="pill">{{ r.component }}</span></td>
+            <td>{{ r.units }}</td>
+            <td>{{ r.level or '—' }}</td>
+            <td>
+              {% if r.status == 'FULFILLED' %}
+                <span class="ok">{{ r.status }}</span>
+              {% elif r.status in ['OPEN','CLAIMED','PARTIAL'] %}
+                <span class="warn">{{ r.status }}</span>
+              {% else %}
+                <span class="low">{{ r.status }}</span>
+              {% endif %}
+            </td>
+            <td>{{ r.accepted_by_bank_id or '—' }}</td>
+            <td>{{ r.decision_note or '—' }}</td>
+            <td>{{ r.decision_at or r.created_at }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p>No matching requests.</p>
+    {% endif %}
+  </div>
+
+  {% if role == 'BloodBank' %}
+  <div class="card">
+    <h3>Requests Fulfilled by Your Bank</h3>
+    {% if fulfilled %}
+      <table>
+        <tr>
+          <th>Txn ID</th>
+          <th>Request ID</th>
+          <th>Hospital</th>
+          <th>Blood Type</h5>
+          <th>Component</th>
+          <th>Units</th>
+          <th>Level</th>
+          <th>Fulfilled At</th>
+        </tr>
+        {% for f in fulfilled %}
+          <tr>
+            <td>{{ f.transaction_id }}</td>
+            <td>{{ f.request_id }}</td>
+            <td>{{ f.hospital }}</td>
+            <td>{{ f.blood_type }}</td>
+            <td>{{ f.component }}</td>
+            <td>{{ f.units_fulfilled }}</td>
+            <td>{{ f.level or '—' }}</td>
+            <td>{{ f.fulfilled_at }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% else %}
+      <p>No fulfillments yet.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+</body>
+</html>
